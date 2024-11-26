@@ -51,6 +51,9 @@ case $i in
 esac
 done
 
+# The script will terminate after the first line that fails
+set -e
+
 bash $SCRIPTS_PATH/internal/2a_appbundle.sh -i=$INSTALL_PATH
 
 echo "======= AppBundle Created ======="

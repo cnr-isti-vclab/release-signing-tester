@@ -2,7 +2,7 @@
 
 SCRIPTS_PATH="$(dirname "$(realpath "$0")")"/..
 INSTALL_PATH=$SCRIPTS_PATH/../../install
-CERT_FILE=$SCRIPTS_PATH/../../certificate/certificate.pfx
+CERT_FILE=$INSTALL_PATH/../certificate/certificate.pfx
 CERT_PSSW=""
 
 #checking for parameters
@@ -18,7 +18,7 @@ case $i in
         shift # past argument=value
         ;;
     -cp=*|--cert_pssw=*)
-        CERT_PSSW=${i#*=}
+        CERT_PSSW="${i#*=}"
         shift # past argument=value
         ;;
     *)
@@ -29,6 +29,12 @@ done
 
 cd $INSTALL_PATH
 
+# if cert file does not exist, exit
+if [ ! -f $CERT_FILE ]
+then
+    echo "Certificate file not found. Exiting..."
+    exit 1
+fi
 
 CERT_REL=$(realpath --relative-to=$INSTALL_PATH $CERT_FILE) # get relative path of the cert file
 CERT_WIN=$(echo "$CERT_REL" | sed 's/^\///' | sed 's/\//\\/g') # get windows relative path (with backslashes) of the cert
@@ -38,5 +44,5 @@ for file in $(find $INSTALL_PATH -name '*.dll' -or -name '*.exe');
 do
     FILE_REL=$(realpath --relative-to=$INSTALL_PATH $file) # relative path
     FILE_WIN=$(echo "$FILE_REL" | sed 's/^\///' | sed 's/\//\\/g')  # win relative path
-    signtool.exe sign //fd SHA256 //f $CERT_WIN //p $CERT_PSSW //t http://timestamp.comodoca.com/authenticode $FILE_WIN
+    signtool.exe sign //debug //fd SHA256 //f $CERT_WIN //p $CERT_PSSW //t http://timestamp.comodoca.com/authenticode $FILE_WIN
 done

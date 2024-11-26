@@ -52,7 +52,7 @@ jobs:
     - name: Deploy
       shell: bash
       run: |
-        bash scripts/${{ runner.os }}/2_deploy.sh
+        bash scripts/${{ runner.os }}/2_deploy.sh --cert_pssw='${{ secrets.WIN_CERTIFICATE_PSSW }}' --cert_id='${{ secrets.MACOS_CERT_ID }}'
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
