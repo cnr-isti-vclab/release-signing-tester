@@ -1,13 +1,12 @@
 ; Must modify:
-; - MESHLAB_VERSION
 ; - DISTRIB_PATH
 
 !define MAINDIR $PROGRAMFILES64
-!define PRODUCT_NAME "MeshLab"
-!define PRODUCT_VERSION "MESHLAB_VERSION"
-!define PRODUCT_PUBLISHER "Paolo Cignoni - VCG - ISTI - CNR"
-!define PRODUCT_WEB_SITE "http://www.meshlab.net"
-!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\meshlab.exe"
+!define PRODUCT_NAME "ReleaseSigningTester"
+!define PRODUCT_VERSION "0.1"
+!define PRODUCT_PUBLISHER "Alessandro Muntoni - VCG - ISTI - CNR"
+!define PRODUCT_WEB_SITE "https://vcg.isti.cnr.it/"
+!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ReleaseSigningTester.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 !define DISTRIB_FOLDER "DISTRIB_PATH"
@@ -33,7 +32,7 @@
 
 
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\meshlab.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\ReleaseSigningTester.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -46,8 +45,8 @@
 !define /date NOW "%Y_%m_%d"
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "MeshLab${PRODUCT_VERSION}-windows.exe"
-InstallDir "${MAINDIR}\VCG\MeshLab"
+OutFile "ReleaseSigningTester-windows.exe"
+InstallDir "${MAINDIR}\VCG\ReleaseSigningTester"
 ShowInstDetails show
 ShowUnInstDetails show
 
@@ -58,13 +57,13 @@ ShowUnInstDetails show
 Function .onInit
   ReadRegStr $0 HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
   ${If} $0 != "" ;2020.0x...
-    MessageBox MB_OK "Please first uninstall old MeshLab version. Starting uninstaller now..."
+    MessageBox MB_OK "Please first uninstall old ReleaseSigningTester version. Starting uninstaller now..."
 	StrCpy $8 '"$0"'
 	!insertmacro ExecWaitJob r8
   ${Else}
-    ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MeshLab_64b" "UninstallString"
+    ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ReleaseSigningTester_64b" "UninstallString"
     ${If} $0 != "" ;2016.12
-	  MessageBox MB_OK "Please first uninstall old MeshLab version. Starting uninstaller now..."
+	  MessageBox MB_OK "Please first uninstall old ReleaseSigningTester version. Starting uninstaller now..."
    	  StrCpy $8 '"$0"'
 	  !insertmacro ExecWaitJob r8
     ${EndIf}
@@ -75,13 +74,13 @@ Section "MainSection" SEC01
   SetOutPath "$INSTDIR"
   ;Let's delete all the dangerous stuff from previous releases.
   ;Shortcuts for currentuser shell context
-  RMDir /r "$SMPROGRAMS\MeshLab"
-  Delete "$DESKTOP\MeshLab.lnk"
+  RMDir /r "$SMPROGRAMS\ReleaseSigningTester"
+  Delete "$DESKTOP\ReleaseSigningTester.lnk"
 
   ;Shortcuts for allusers
   SetShellVarContext all ;Set alluser context. Icons created later are in allusers
-  RMDir /r "$SMPROGRAMS\MeshLab"
-  Delete "$DESKTOP\MeshLab.lnk"
+  RMDir /r "$SMPROGRAMS\ReleaseSigningTester"
+  Delete "$DESKTOP\ReleaseSigningTester.lnk"
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
@@ -90,26 +89,14 @@ Section "MainSection" SEC01
   Delete "$INSTDIR\*"
 
   SetOverwrite on
-  File "${DISTRIB_FOLDER}\meshlab.exe"
-  ;File "${DISTRIB_FOLDER}\meshlabserver.exe"
-  CreateDirectory "$SMPROGRAMS\MeshLab"
-  CreateShortCut "$SMPROGRAMS\MeshLab\MeshLab.lnk" "$INSTDIR\meshlab.exe"
-  CreateShortCut "$DESKTOP\MeshLab.lnk" "$INSTDIR\meshlab.exe"
-  ;CreateShortCut '$SMPROGRAMS\MeshLab\MeshLabServer.lnk' 'powershell.exe -noexit -command "cd $INSTDIR\ " '
+  File "${DISTRIB_FOLDER}\ReleaseSigningTester.exe"
+  CreateDirectory "$SMPROGRAMS\ReleaseSigningTester"
+  CreateShortCut "$SMPROGRAMS\ReleaseSigningTester\ReleaseSigningTester.lnk" "$INSTDIR\ReleaseSigningTester.exe"
+  CreateShortCut "$DESKTOP\ReleaseSigningTester.lnk" "$INSTDIR\ReleaseSigningTester.exe"
 
   ;Copy everything inside DISTRIB
   SetOutPath "$INSTDIR"
   File /nonfatal /a /r "${DISTRIB_FOLDER}\"
-
-  ;Association to extensions:
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".obj" "OBJ File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".ply" "PLY File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".stl" "STL File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".qobj" "QOBJ File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".off" "OFF File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".ptx" "PTX File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".vmi" "VMI File"
-  ${registerExtension} "$INSTDIR\meshlab.exe" ".fbx" "FBX File"
 
 SectionEnd
 
@@ -126,12 +113,11 @@ SectionEnd
 
 Section -Post
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\meshlab.exe"
-  ;WriteRegStr HKLM "${PRODUCT_DIR_REGKEY_S}" "" "$INSTDIR\meshlabserver.exe"
+  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\ReleaseSigningTester.exe"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall.exe"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
-  WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\meshlab.exe"
+  WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\ReleaseSigningTester.exe"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
@@ -140,8 +126,8 @@ SectionEnd
 Section -AdditionalIcons
   SetShellVarContext all
   WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
-  CreateShortCut "$SMPROGRAMS\MeshLab\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
-  CreateShortCut "$SMPROGRAMS\MeshLab\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+  CreateShortCut "$SMPROGRAMS\ReleaseSigningTester\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
+  CreateShortCut "$SMPROGRAMS\ReleaseSigningTester\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 
@@ -158,27 +144,17 @@ Section Uninstall ;uninstall instructions
   RMDir /r "$INSTDIR"
 
   ;Remove shortcuts in currentuser profile
-  RMDir /r "$SMPROGRAMS\MeshLab"
-  Delete "$DESKTOP\MeshLab.lnk"
+  RMDir /r "$SMPROGRAMS\ReleaseSigningTester"
+  Delete "$DESKTOP\ReleaseSigningTester.lnk"
 
   ;Remove shortcuts in allusers profile
   SetShellVarContext all
-  RMDir /r "$SMPROGRAMS\MeshLab"
-  Delete "$DESKTOP\MeshLab.lnk"
+  RMDir /r "$SMPROGRAMS\ReleaseSigningTester"
+  Delete "$DESKTOP\ReleaseSigningTester.lnk"
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY_S}"
-
-  ;Unregistering file association
-  ${unregisterExtension} ".obj" "OBJ File"
-  ${unregisterExtension} ".ply" "PLY File"
-  ${unregisterExtension} ".stl" "STL File"
-  ${unregisterExtension} ".qobj" "QOBJ File"
-  ${unregisterExtension} ".off" "OFF File"
-  ${unregisterExtension} ".ptx" "PTX File"
-  ${unregisterExtension} ".vmi" "VMI File"
-  ${unregisterExtension} ".fbx" "FBX File"
 
   SetAutoClose true
 SectionEnd

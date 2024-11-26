@@ -25,25 +25,41 @@ jobs:
     - name: Install dependencies
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get install ninja-build
+        sudo apt-get install ninja-build libfuse2
     - name: Install dependencies
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        brew install ninja
+        brew install node ninja
+        npm install -g appdmg
+    - name: Set CodeSign Certificate macOS
+      if: ${{ runner.os  == 'macOS' }} 
+      uses: apple-actions/import-codesign-certs@v2
+      with:
+        p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
+        p12-password: ${{ secrets.MACOS_CERTIFICATE_PSSW }}
+    - name: Set CodeSign Certificate Windows
+      shell: powershell
+      if: ${{ runner.os == 'Windows' }}
+      run: |
+        New-Item -ItemType directory -Path certificate
+        Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WIN_CERTIFICATE }}'
+        certutil -decode certificate\certificate.txt certificate\certificate.pfx
     - name: Build
       shell: bash
       run: |
-        mkdir build
-        cd build
-        cmake -GNinja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=../install \
-          ..
-        ninja
-        ninja install
+        bash scripts/${{ runner.os }}/1_build.sh
+    - name: Deploy
+      shell: bash
+      run: |
+        bash scripts/${{ runner.os }}/2_deploy.sh
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: artifact_${{ matrix.os }}
+        name: install_${{ matrix.os }}
         path: install/
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages_${{ matrix.os }}
+        path: packages/

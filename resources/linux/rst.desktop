@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ReleaseSigningTester
+GenericName=ReleaseSigningTester
+Comment=Test application for release signing
+Exec=ReleaseSigningTester %F
+Icon=rst
+Terminal=false
+Name[en_US]=rst.desktop
