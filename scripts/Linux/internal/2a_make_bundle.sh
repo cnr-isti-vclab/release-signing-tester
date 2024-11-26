@@ -26,6 +26,7 @@ then
     exit 1
 fi
 
+mkdir -p $INSTALL_PATH/usr/share/applications
 mkdir -p $INSTALL_PATH/usr/share/doc/rst
 mkdir -p $INSTALL_PATH/usr/share/icons/Yaru/256x256@2x/apps/
 mkdir -p $INSTALL_PATH/usr/share/icons/Yaru/256x256/apps/

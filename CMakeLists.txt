@@ -40,11 +40,17 @@ set_target_properties(ReleaseSigningTester PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-include(GNUInstallDirs)
-install(TARGETS ReleaseSigningTester
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if (NOT WIN32)
+    include(GNUInstallDirs)
+    install(TARGETS ReleaseSigningTester
+        BUNDLE DESTINATION .
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+else()
+    install(TARGETS ReleaseSigningTester
+        RUNTIME DESTINATION .
+    )
+endif()
 
 qt_finalize_executable(ReleaseSigningTester)

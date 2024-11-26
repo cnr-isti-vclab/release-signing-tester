@@ -7,4 +7,5 @@ Comment=Test application for release signing
 Exec=ReleaseSigningTester %F
 Icon=rst
 Terminal=false
+Categories=Utility;Development;
 Name[en_US]=rst.desktop
