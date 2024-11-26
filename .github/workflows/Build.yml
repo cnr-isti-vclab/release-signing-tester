@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-24.04', 'macos-13', 'macos-latest', 'windows-latest']
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        cache: 'true'
+        version: '6.6.*'
+    - name: Build
+      shell: bash
+      run: |
+        mkdir build
+        cd build
+        cmake -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=install \
+          ..
+        ninja
+        ninja install
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifact_${{ matrix.os }}
+        path: install/
