@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-22.04', 'ubuntu-24.04', 'macos-13', 'macos-latest', 'windows-latest']
+        os: ['ubuntu-20.04', 'macos-13', 'macos-latest', 'windows-latest']
     steps:
     - uses: actions/checkout@v4
       with:
@@ -52,7 +52,9 @@ jobs:
     - name: Deploy
       shell: bash
       run: |
-        bash scripts/${{ runner.os }}/2_deploy.sh --cert_pssw='${{ secrets.WIN_CERTIFICATE_PSSW }}' --cert_id='${{ secrets.MACOS_CERT_ID }}'
+        bash scripts/${{ runner.os }}/2_deploy.sh \
+          --cert_pssw='${{ secrets.WIN_CERTIFICATE_PSSW }}' \
+          --cert_id='${{ secrets.MACOS_CERT_ID }}'
     - name: Upload
       uses: actions/upload-artifact@v4
       with:

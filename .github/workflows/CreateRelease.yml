@@ -1,0 +1,146 @@
+name: CreateRelease
+
+on:
+  workflow_dispatch: #manual run
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+        default: 'YYYY.MM'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-20.04', 'macos-13', 'macos-latest', 'windows-latest']
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        cache: 'true'
+        version: '6.6.*'
+    - name: Install dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install ninja-build libfuse2
+    - name: Install dependencies
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        brew install node ninja
+        npm install -g appdmg
+    - name: Set CodeSign Certificate macOS
+      if: ${{ runner.os  == 'macOS' }} 
+      uses: apple-actions/import-codesign-certs@v2
+      with:
+        p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
+        p12-password: ${{ secrets.MACOS_CERTIFICATE_PSSW }}
+    - name: Set CodeSign Certificate Windows
+      shell: powershell
+      if: ${{ runner.os == 'Windows' }}
+      run: |
+        New-Item -ItemType directory -Path certificate
+        Set-Content -Path certificate\certificate.txt -Value '${{ secrets.WIN_CERTIFICATE }}'
+        certutil -decode certificate\certificate.txt certificate\certificate.pfx
+    - name: Build
+      shell: bash
+      run: |
+        bash scripts/${{ runner.os }}/1_build.sh
+    - name: Deploy
+      shell: bash
+      run: |
+        bash scripts/${{ runner.os }}/2_deploy.sh \
+          --cert_pssw='${{ secrets.WIN_CERTIFICATE_PSSW }}' \
+          --cert_id='${{ secrets.MACOS_CERT_ID }}' \
+          --notarization_user='${{ secrets.MACOS_NOTARIZATION_USER }}' \
+          --notarization_team='${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}' \
+          --notarization_pssw='${{ secrets.MACOS_NOTARIZATION_PSSW }}'
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: install_${{ matrix.os }}
+        path: install/
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages_${{ matrix.os }}
+        path: packages/
+
+  create_release:
+    name: Create Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+
+    #Download Linux Packages
+    - name: Download Linux ZIP
+      uses: actions/download-artifact@v4
+      with:
+        name: install_ubuntu-20.04
+        path: install_ubuntu-20.04
+    - name: Download Linux Package
+      uses: actions/download-artifact@v4
+      with:
+        name: packages_ubuntu-20.04
+        path: packages_ubuntu-20.04
+    - name: Change Permissions
+      run: |
+        chmod +x install_ubuntu-20.04/usr/bin/ReleaseSigningTester
+        chmod +x install_ubuntu-20.04/AppRun
+    - name: Create Portable Linux Archive
+      run: |
+        cd install_ubuntu-20.04
+        tar -cvzf ../ReleaseSigningTester-linux_x86_64.tar.gz *
+        cd ..
+
+    #Download MacOS Packages
+    - name: Download MacOS DMG x86_64
+      uses: actions/download-artifact@v4
+      with:
+        name: packages_macos-13
+        path: packages_macos-13
+    - name: Download MacOS DMG arm64
+      uses: actions/download-artifact@v4
+      with:
+        name: packages_macos-latest
+        path: packages_macos-latest
+
+    #Download Windows Packages
+    - name: Download Windows ZIP
+      uses: actions/download-artifact@v4
+      with:
+        name: install_windows-latest
+        path: install_windows-latest
+    - name: Download Windows Installer
+      uses: actions/download-artifact@v4
+      with:
+        name: packages_windows-latest
+        path: packages_windows-latest
+    - name: Create Portable Windows Archive
+      run: |
+        cd install_windows-latest
+        zip -r ../ReleaseSigningTester-windows_x86_64.zip *
+        cd ..
+
+    #Create release and upload
+    - name: Create Release
+      uses: "ncipollo/release-action@v1"
+      with:
+        token: "${{ secrets.GITHUB_TOKEN }}"
+        tag: "ReleaseSigningTester-${{ github.event.inputs.version }}"
+        name: "ReleaseSigningTester-${{ github.event.inputs.version }}"
+        artifacts: |
+          ReleaseSigningTester-linux_x86_64.tar.gz
+          packages_ubuntu-20.04/ReleaseSigningTester0.1-linux_x86_64.AppImage
+          packages_macos-13/ReleaseSigningTester-macos_x86_64.dmg
+          packages_macos-latest/ReleaseSigningTester-macos_arm64.dmg
+          ReleaseSigningTester-windows_x86_64.zip
+          packages_windows-latest/ReleaseSigningTester-windows_x86_64.exe
